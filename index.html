@@ -33,6 +33,13 @@
             transform: translateY(0);
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
+        .top-category-button {
+            transition: all 0.2s ease-in-out;
+        }
+        .top-category-button.active {
+            background-color: #4338ca;
+            color: white;
+        }
         @keyframes fadeInOut {
             0%, 100% { opacity: 0; transform: translateY(10px) scale(0.95); }
             10%, 90% { opacity: 1; transform: translateY(0) scale(1); }
@@ -52,6 +59,13 @@
             <p class="text-gray-500 mt-2">연습할 자음과 모음, 낱말을 선택하고 자유롭게 써보세요.</p>
         </header>
 
+        <nav id="top-categories" class="flex justify-center gap-4 mb-6">
+            <button data-category="letter" class="top-category-button px-3 py-2 rounded-lg bg-gray-200 text-gray-700 font-bold">글자 연습</button>
+            <button data-category="word" class="top-category-button px-3 py-2 rounded-lg bg-gray-200 text-gray-700 font-bold">단어 연습</button>
+            <button data-category="sentence" class="top-category-button px-3 py-2 rounded-lg bg-gray-200 text-gray-700 font-bold">문장 연습</button>
+        </nav>
+
+        <div id="letter-practice-section">
         <!-- 글자 선택 버튼 영역 -->
         <div id="controls" class="mb-4">
             <div class="mb-4">
@@ -82,6 +96,17 @@
             <button id="grade-button" class="w-full bg-blue-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none transition-transform transform hover:scale-105">채점하기</button>
             <button id="reset-button" class="w-full bg-red-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-red-600 focus:outline-none transition-transform transform hover:scale-105">지우기</button>
         </div>
+        </div>
+
+        <div id="word-practice-section" class="hidden mb-6">
+            <button id="generate-word" class="w-full bg-blue-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none transition-transform transform hover:scale-105 mb-4">AI 단어 만들기</button>
+            <p id="word-output" class="text-center text-2xl font-bold" style="font-family: 'Noto Sans KR', sans-serif;"></p>
+        </div>
+
+        <div id="sentence-practice-section" class="hidden">
+            <button id="generate-sentence" class="w-full bg-blue-500 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-blue-600 focus:outline-none transition-transform transform hover:scale-105 mb-4">AI 문장 만들기</button>
+            <p id="sentence-output" class="text-center text-xl font-bold" style="font-family: 'Noto Sans KR', sans-serif;"></p>
+        </div>
     </div>
 
     <script>
@@ -98,6 +123,15 @@
         const playSoundButton = document.getElementById('play-sound-button');
         const gradeButton = document.getElementById('grade-button');
         const resetButton = document.getElementById('reset-button');
+
+        const topCategoryButtons = document.querySelectorAll('.top-category-button');
+        const letterSection = document.getElementById('letter-practice-section');
+        const wordSection = document.getElementById('word-practice-section');
+        const sentenceSection = document.getElementById('sentence-practice-section');
+        const generateWordButton = document.getElementById('generate-word');
+        const wordOutput = document.getElementById('word-output');
+        const generateSentenceButton = document.getElementById('generate-sentence');
+        const sentenceOutput = document.getElementById('sentence-output');
         
         const consonantChars = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
         const vowelChars = ['ㅏ', 'ㅐ', 'ㅑ', 'ㅒ', 'ㅓ', 'ㅔ', 'ㅕ', 'ㅖ', 'ㅗ', 'ㅘ', 'ㅙ', 'ㅚ', 'ㅛ', 'ㅜ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅠ', 'ㅡ', 'ㅢ', 'ㅣ'];
@@ -165,6 +199,28 @@
         let isDrawing = false;
         let userStrokes = [];
         let activeButton = null;
+
+        const sampleWords = ['사과', '학교', '친구', '바람', '산책'];
+        const sampleSentences = ['오늘은 날씨가 좋아요.', '나는 책 읽기를 좋아합니다.', '고양이가 창 밖을 바라봐요.', '새로운 도전을 시작해보세요.'];
+
+        function changeTopCategory(category) {
+            letterSection.style.display = category === 'letter' ? 'block' : 'none';
+            wordSection.style.display = category === 'word' ? 'block' : 'none';
+            sentenceSection.style.display = category === 'sentence' ? 'block' : 'none';
+            topCategoryButtons.forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.querySelector(`.top-category-button[data-category="${category}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+        }
+
+        generateWordButton.addEventListener('click', () => {
+            const word = sampleWords[Math.floor(Math.random() * sampleWords.length)];
+            wordOutput.textContent = word;
+        });
+
+        generateSentenceButton.addEventListener('click', () => {
+            const sentence = sampleSentences[Math.floor(Math.random() * sampleSentences.length)];
+            sentenceOutput.textContent = sentence;
+        });
         
         function resizeCanvas() {
             const size = canvas.parentElement.clientWidth;
@@ -333,9 +389,14 @@
             canvas.addEventListener('touchmove', draw, { passive: false });
             canvas.addEventListener('touchend', stopDrawing);
             window.addEventListener('resize', resizeCanvas);
-            
+
+            topCategoryButtons.forEach(btn => {
+                btn.addEventListener('click', () => changeTopCategory(btn.dataset.category));
+            });
+
             resizeCanvas();
             changeCharacter('ㄱ');
+            changeTopCategory('letter');
         }
 
         init();
